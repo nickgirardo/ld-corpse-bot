@@ -1,4 +1,5 @@
 import * as Util from "./engine/util.js";
+import * as Keyboard from "./engine/keyboard.js";
 
 import Camera from "./entities/camera.js";
 import Map from "./entities/map.js";
@@ -41,6 +42,8 @@ function init() {
     console.error("Unable to create webgl2 context");
     return;
   }
+
+  Keyboard.init();
 
   gl.enable(gl.BLEND);
   gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);

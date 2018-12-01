@@ -123,7 +123,7 @@ export default class Map {
       camera.matrix
     );
 
-    gl.uniform1ui(this.programInfo.locations.uniform.mapTileWidth, 40);
+    gl.uniform1ui(this.programInfo.locations.uniform.mapTileWidth, this.width);
 
     gl.drawArrays(gl.TRIANGLES, 0, this.vertexData.length/2);
     gl.disableVertexAttribArray(this.programInfo.locations.attribute.vertex);
