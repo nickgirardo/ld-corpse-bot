@@ -3,13 +3,15 @@ import * as Keyboard from "./engine/keyboard.js";
 
 import Camera from "./entities/camera.js";
 import Map from "./entities/map.js";
+import Corpsebot from "./entities/corpsebot.js";
 
 const canvas = document.querySelector('canvas');
 const gl = canvas.getContext('webgl2', { antialias: false });
 
 const aspectRatio = 16/9;
 
-import * as tilesheet from "../assets/img/tilesheet.png";
+import * as mapTilesheet from "../assets/img/tilesheet.png";
+import * as corpsebotTilesheet from "../assets/img/corpsebot.png";
 
 const scene = [];
 
@@ -52,7 +54,10 @@ function init() {
   window.addEventListener("resize", e=>Util.resize(gl, canvas, aspectRatio));
 
   scene.push(camera);
-  Util.loadImage(tilesheet).then((img) => scene.push(new Map(gl, img, 40)));
+
+  // TODO this isn't great lol
+  Util.loadImage(mapTilesheet).then((img) => scene.push(new Map(gl, img, 40)));
+  Util.loadImage(corpsebotTilesheet).then((img) => scene.push(new Corpsebot(gl, img)));
 
   update();
 }
