@@ -8,7 +8,6 @@ import * as vertSrc from "../../assets/shaders/basic.vert";
 export default class Corpsebot {
 
   constructor(gl, tilesheet) {
-    this.pos = vec2.fromValues(10, 10);
     // Create program and link shaders
     this.programInfo = Util.createProgram(gl, {vertex: vertSrc, fragment: fragSrc}, {
       uniform: {
@@ -22,6 +21,8 @@ export default class Corpsebot {
       },
     });
 
+    this.translation = mat4.create();
+
     this.vertexBuffer = gl.createBuffer();
     this.buildVerts();
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
@@ -34,6 +35,30 @@ export default class Corpsebot {
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, tilesheet);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+
+    this.pos = vec2.fromValues(10, 8);
+    this.vel = vec2.create();
+    this.friction = 0.65;
+  }
+
+  update() {
+    function moreRecentPress(a, b) {
+      if (Keyboard.keys[a] && Keyboard.keys[b])
+        return (Keyboard.timestamps[b] > Keyboard.timestamps[a]) ? -1 : 1;
+      else if (Keyboard.keys[a] || Keyboard.keys[b])
+        return Keyboard.keys[b] ? -1 : 1;
+      else
+        return 0;
+    }
+
+    const direction = moreRecentPress(68, 65);
+
+    this.vel[0] += direction * 0.1;
+    this.vel[0] *= this.friction;
+
+    vec2.add(this.pos, this.pos, this.vel);
+
+    Util.mat4fromTrans2d(this.translation, this.pos);
   }
 
   buildVerts() {
@@ -73,8 +98,6 @@ export default class Corpsebot {
     this.vertexData = new Float32Array(verts);
   }
 
-  update() {
-  }
 
   draw(canvas, gl, camera) {
     gl.useProgram(this.programInfo.program);
@@ -97,13 +120,10 @@ export default class Corpsebot {
       camera.matrix
     );
 
-    // TODO
-    const temp = mat4.create();
-    Util.mat4fromTrans2d(temp, this.pos);
     gl.uniformMatrix4fv(
       this.programInfo.locations.uniform.transform,
       false,
-      temp
+      this.translation
     );
 
     gl.drawArrays(gl.TRIANGLES, 0, this.vertexData.length/4);
