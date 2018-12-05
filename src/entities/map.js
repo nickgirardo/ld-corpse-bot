@@ -77,7 +77,7 @@ export default class Map {
     const tilesheetPxWidth = 128;
 
     // Width and height of tilesheet in different images
-    const tilesheetWidth = 4;
+    const tilesheetWidth = 8;
     const imageWidth = Math.floor(tilesheetPxWidth/tilesheetWidth);
 
     for(let i=0; i<this.height; i++) {

@@ -72,7 +72,7 @@ export default class Corpsebot {
     const tilesheetPxWidth = 128;
 
     // Width and height of tilesheet in different images
-    const tilesheetWidth = 4;
+    const tilesheetWidth = 8;
     const imageWidth = Math.floor(tilesheetPxWidth/tilesheetWidth);
 
     const texLocX = 0;
