@@ -38,15 +38,35 @@ export default class Map {
     this.width = width;
     this.height = this.data.length / width;
 
+    this.animationFrames = new Array(64).fill(1);
+    this.animationFrames[2] = 4;
+    this.animationFrames[4] = 8;
+
+    // The value in this only matters for animationFrames[i] !== 1
+    this.frameDuration = new Array(64).fill(1);
+    this.frameDuration[2] = 500;
+    this.frameDuration[4] = 52;
+
+    // Width and height of tilesheet in px
+    this.tsPxWidth = 128;
+
+    // Width and height of tilesheet in different images
+    this.tsTileWidth = 8;
+
     // Create program and link shaders
     this.programInfo = Util.createProgram(gl, {vertex: vertSrc, fragment: fragSrc}, {
       uniform: {
         camera: 'camera',
         diffuse: 'diffuse',
-        mapTileWidth: 'xTiles',
+        mapTileWidth: 'mapTileWidth',
+        tsPxWidth: 'tsPxWidth',
+        tsTileWidth: 'tsTileWidth',
+        animationFrames: 'animationFrames',
+        frameDuration: 'frameDuration',
+        stageTime: 'stageTime',
       },
       attribute: {
-        uv: 'vertex_uv',
+        tileNum: 'tileNum',
       },
     });
 
@@ -69,37 +89,9 @@ export default class Map {
   buildVerts() {
     const verts = [];
 
-    function correctedUV(pos) {
-      return (pos + 0.5) / tilesheetPxWidth;
-    }
+    this.data.forEach(v=>verts.push(v,v,v,v,v,v));
 
-    // Width and height of tilesheet in px
-    const tilesheetPxWidth = 128;
-
-    // Width and height of tilesheet in different images
-    const tilesheetWidth = 8;
-    const imageWidth = Math.floor(tilesheetPxWidth/tilesheetWidth);
-
-    for(let i=0; i<this.height; i++) {
-      for(let j=0; j<this.width; j++) {
-        const current = this.data[i*this.width + j];
-        const texLocX = current % tilesheetWidth;
-        const texLocY = Math.floor(current / tilesheetWidth);
-
-        verts.push(
-          // First tri
-          correctedUV(texLocX*imageWidth), correctedUV((texLocY+1)*imageWidth -1),
-          correctedUV((texLocX+1)*imageWidth -1), correctedUV((texLocY+1)*imageWidth -1),
-          correctedUV(texLocX*imageWidth), correctedUV(texLocY*imageWidth),
-          // Second tri
-          correctedUV((texLocX+1)*imageWidth -1), correctedUV(texLocY*imageWidth),
-          correctedUV(texLocX*imageWidth), correctedUV(texLocY*imageWidth),
-          correctedUV((texLocX+1)*imageWidth -1), correctedUV((texLocY+1)*imageWidth -1),
-        );
-      }
-    }
-
-    this.vertexData = new Float32Array(verts);
+    this.vertexData = new Uint16Array(verts);
   }
 
   update() {
@@ -114,8 +106,8 @@ export default class Map {
 
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
 
-    gl.enableVertexAttribArray(this.programInfo.locations.attribute.uv);
-    gl.vertexAttribPointer(this.programInfo.locations.attribute.uv, 2, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(this.programInfo.locations.attribute.tileNum);
+    gl.vertexAttribIPointer(this.programInfo.locations.attribute.tileNum, 1, gl.UNSIGNED_SHORT, false, 0, 0);
 
     gl.uniformMatrix4fv(
       this.programInfo.locations.uniform.camera,
@@ -124,8 +116,14 @@ export default class Map {
     );
 
     gl.uniform1ui(this.programInfo.locations.uniform.mapTileWidth, this.width);
+    gl.uniform1ui(this.programInfo.locations.uniform.tsPxWidth, this.tsPxWidth);
+    gl.uniform1ui(this.programInfo.locations.uniform.tsTileWidth, this.tsTileWidth);
 
-    gl.drawArrays(gl.TRIANGLES, 0, this.vertexData.length/2);
+    gl.uniform1uiv(this.programInfo.locations.uniform.animationFrames, this.animationFrames, 0, this.animationFrames.length);
+    gl.uniform1uiv(this.programInfo.locations.uniform.frameDuration, this.frameDuration, 0, this.frameDuration.length);
+    gl.uniform1ui(this.programInfo.locations.uniform.stageTime, Math.floor(performance.now()));
+
+    gl.drawArrays(gl.TRIANGLES, 0, this.vertexData.length);
     gl.disableVertexAttribArray(this.programInfo.locations.attribute.vertex);
   }
 
